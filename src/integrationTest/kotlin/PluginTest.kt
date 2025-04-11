@@ -42,7 +42,7 @@ class PluginTest {
     companion object {
         // Define the plugin path as a constant in the companion object
         private const val PLUGIN_PATH =
-            "/Users/robertwohl/IdeaProjects/MyCodeSnippetInserter/build/distributions/MyCodeSnippetInserter-1.0-SNAPSHOT.zip"
+            "/Users/robertwohl/IdeaProjects/MyCodeSnippetInserter/build/distributions/MyKotlinCodeInserter-1.0-SNAPSHOT.zip"
     }
 
     // Use to pause IDE:
@@ -70,7 +70,7 @@ class PluginTest {
                 shouldBe("Plugin is installed") {
                     x {
                         and(
-                            byVisibleText("MyCodeSnippetInser..."),
+                            byVisibleText("MyKotlinCodeInserter"),
                             byJavaClass("javax.swing.JLabel")
                         )
                     }.present()
@@ -94,11 +94,12 @@ class PluginTest {
             PluginConfigurator(this).installPluginFromPath(Path(PLUGIN_PATH))
         }.runIdeWithDriver().useDriverAndCloseIde {
             ideFrame {
+
                 // Wait for loading indicators
                 waitForIndicators(1.minutes)
 
                 // Open the "MyKotlinInserter" side panel
-                actionButtonByXpath(xpath = xQuery { byAccessibleName("MyKotlinSnippetInserter") }).click()
+                actionButtonByXpath(xpath = xQuery { byAccessibleName("MyKotlinInserter") }).click()
 
                 // Click the button to trigger the "Create Data Class File" flow
                 button { byText("Create Data Class File") }.click()
@@ -136,7 +137,7 @@ class PluginTest {
                 waitForIndicators(1.minutes)
 
                 // Open the "MyKotlinInserter" side panel
-                actionButtonByXpath(xpath = xQuery { byAccessibleName("MyKotlinSnippetInserter") }).click()
+                actionButtonByXpath(xpath = xQuery { byAccessibleName("MyKotlinInserter") }).click()
 
                 // Click the button to trigger the "Create Data Class File" flow
                 button { byText("Create Singleton File") }.click()
@@ -174,7 +175,7 @@ class PluginTest {
                 waitForIndicators(1.minutes)
 
                 // Open the "MyKotlinInserter" side panel
-                actionButtonByXpath(xpath = xQuery { byAccessibleName("MyKotlinSnippetInserter") }).click()
+                actionButtonByXpath(xpath = xQuery { byAccessibleName("MyKotlinInserter") }).click()
 
                 // Click the button to trigger the "Create Data Class File" flow
                 button { byText("Create Extension Functions File") }.click()
@@ -212,7 +213,7 @@ class PluginTest {
                 waitForIndicators(1.minutes)
 
                 // Open the "MyKotlinInserter" side panel
-                actionButtonByXpath(xpath = xQuery { byAccessibleName("MyKotlinSnippetInserter") }).click()
+                actionButtonByXpath(xpath = xQuery { byAccessibleName("MyKotlinInserter") }).click()
 
                 // Click the button to trigger the "Create Data Class File" flow
                 button { byText("Create Coroutine Patterns File") }.click()
@@ -284,8 +285,6 @@ class PluginTest {
 //                Thread.sleep(1000)
 //
 //                //Do something here
-//                //menu("Tools").click()
-//                //Thread.sleep(10.minutes.inWholeMilliseconds)
 //                invokeAction("CloseProject", now = false)
 //            }
 //        }
