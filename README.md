@@ -30,7 +30,8 @@ IntegrationTesting/
 │   ├── test/               # Unit tests
 │   └── integrationTest/    # Integration tests
 │       └── kotlin/
-│           └── PluginTest.kt  # Example integration test
+│           ├── PluginTest.kt  # Integration tests for plugin functionality
+│           └── utils.kt       # Utility functions for metrics collection
 ```
 
 ## Dependencies
@@ -41,6 +42,7 @@ The project uses the following main dependencies:
 - **Kotlin JVM** (version 2.0.0): For Kotlin language support
 - **IntelliJ IDEA Community Edition** (version 2024.3): The target IDE version
 - **IntelliJ Test Framework (Starter)**: For integration testing
+- **IDE Metrics Collector**: For collecting performance metrics during tests
 - **JUnit Jupiter** (version 5.7.1): For test assertions and execution
 - **Kodein DI** (version 7.20.2): For dependency injection
 - **Kotlinx Coroutines** (version 1.10.1): For asynchronous programming
@@ -89,6 +91,36 @@ fun testPluginAction() {
 }
 ```
 
+### Example Test Cases
+
+The project includes several example test cases for a Kotlin code generation plugin:
+
+1. **Plugin Installation Test**: Verifies that the plugin is correctly installed in the IDE
+2. **Data Class Generation**: Tests creating a Kotlin data class file through the plugin UI
+3. **Singleton Pattern Generation**: Tests creating a Kotlin singleton class
+4. **Extension Functions Generation**: Tests creating Kotlin extension functions
+5. **Coroutine Patterns Generation**: Tests creating Kotlin coroutine pattern templates
+
+Each test simulates user interactions with the IDE, such as:
+- Opening the plugin's side panel
+- Clicking buttons to trigger code generation
+- Entering data in dialog boxes
+- Verifying the generated code
+
+### Performance Measurement
+
+The project includes utilities for measuring and recording test performance:
+
+```kotlin
+// Record test execution time
+val startTime = Instant.now()
+// ... test code ...
+val endTime = Instant.now()
+writeTestExecutionTime("testName", startTime, endTime)
+```
+
+Test metrics are saved to CSV files in the `build/reports/metrics` directory for analysis.
+
 ## Key Features
 
 - **IDE Automation**: Simulate user interactions with the IDE
@@ -96,6 +128,7 @@ fun testPluginAction() {
 - **Action Invocation**: Invoke IDE actions programmatically
 - **Wait Conditions**: Wait for IDE processes to complete
 - **Project Setup**: Set up test projects from various sources (GitHub, local, etc.)
+- **Performance Measurement**: Collect and analyze test execution metrics
 
 ## Customizing Tests
 
@@ -105,12 +138,14 @@ You can customize your tests by:
 2. Changing the test project source (GitHub, local, etc.)
 3. Adding custom test utilities
 4. Configuring test timeouts and other parameters
+5. Customizing performance metrics collection and reporting
 
 ## Troubleshooting
 
 - **Test Failures**: Check the test logs in the `build/reports/tests` directory
 - **IDE Startup Issues**: Verify that the specified IntelliJ IDEA version is compatible
 - **Plugin Loading Problems**: Ensure your plugin is correctly built and compatible with the specified IDE version
+- **Performance Metrics Issues**: Check the metrics CSV files in the `build/reports/metrics` directory
 
 ## License
 

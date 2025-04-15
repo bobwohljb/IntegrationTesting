@@ -36,10 +36,13 @@ dependencies {
         intellijIdeaCommunity("2024.3")
         testFramework(TestFrameworkType.Starter)
     }
-
+    integrationTestImplementation("com.jetbrains.intellij.tools:ide-metrics-collector:LATEST-EAP-SNAPSHOT")
+    integrationTestImplementation("com.jetbrains.intellij.tools:ide-metrics-collector-starter:LATEST-EAP-SNAPSHOT")
+    integrationTestImplementation("com.jetbrains.intellij.tools:ide-performance-testing-commands:LATEST-EAP-SNAPSHOT")
     integrationTestImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
     integrationTestImplementation("org.kodein.di:kodein-di-jvm:7.20.2")
     integrationTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.1")
+
 }
 
 intellijPlatform {

@@ -36,6 +36,11 @@ import com.intellij.driver.sdk.ui.components.editor
 import com.intellij.driver.sdk.ui.components.textField
 import com.intellij.driver.sdk.ui.shouldBe
 import com.intellij.driver.sdk.ui.xQuery
+import com.intellij.ide.starter.examples.getMetricsFromSpanAndChildren
+import com.intellij.ide.starter.examples.writeMetricsToCSV
+import com.intellij.ide.starter.examples.writeTestExecutionTime
+import com.intellij.tools.ide.metrics.collector.telemetry.SpanFilter
+import java.time.Instant
 
 
 class PluginTest {
@@ -61,6 +66,8 @@ class PluginTest {
      */
     @Test
     fun installedPluginTest() {
+        val startTime = Instant.now()
+
         Starter.newContext("testExample", TestCase(IdeProductProvider.IC, NoProject).withVersion("2024.3")).apply {
             PluginConfigurator(this).installPluginFromPath(Path(PLUGIN_PATH))
         }.runIdeWithDriver().useDriverAndCloseIde {
@@ -77,10 +84,15 @@ class PluginTest {
                 }
             }
         }
+
+        val endTime = Instant.now()
+        writeTestExecutionTime("installedPluginTest", startTime, endTime)
     }
 
     @Test
     fun testClickSidePanelAndCreateDataClassFile() {
+        val startTime = Instant.now()
+
         Starter.newContext(
             "testCreateDataClassFile",
             TestCase(
@@ -116,10 +128,15 @@ class PluginTest {
                 println("Success: The 'MyDataClass.kt' file was created and opened in the editor.")
             }
         }
+
+        val endTime = Instant.now()
+        writeTestExecutionTime("testClickSidePanelAndCreateDataClassFile", startTime, endTime)
     }
 
     @Test
     fun testClickSidePanelAndCreateSingletonFile() {
+        val startTime = Instant.now()
+
         Starter.newContext(
             "testCreateSingletonFile",
             TestCase(
@@ -154,10 +171,15 @@ class PluginTest {
                 println("Success: The 'MySingleton.kt' file was created and opened in the editor.")
             }
         }
+
+        val endTime = Instant.now()
+        writeTestExecutionTime("testClickSidePanelAndCreateSingletonFile", startTime, endTime)
     }
 
     @Test
     fun testClickSidePanelAndCreateExtensionFunctionsFile() {
+        val startTime = Instant.now()
+
         Starter.newContext(
             "testCreateExtensionFunctionsFile",
             TestCase(
@@ -192,10 +214,15 @@ class PluginTest {
                 println("Success: The 'MySingleton.kt' file was created and opened in the editor.")
             }
         }
+
+        val endTime = Instant.now()
+        writeTestExecutionTime("testClickSidePanelAndCreateExtensionFunctionsFile", startTime, endTime)
     }
 
     @Test
     fun testClickSidePanelAndCreateCoroutinePatternsFile() {
+        val startTime = Instant.now()
+
         Starter.newContext(
             "testCreateCoroutinePatternsFile",
             TestCase(
@@ -230,6 +257,9 @@ class PluginTest {
                 println("Success: The 'MySingleton.kt' file was created and opened in the editor.")
             }
         }
+
+        val endTime = Instant.now()
+        writeTestExecutionTime("testClickSidePanelAndCreateCoroutinePatternsFile", startTime, endTime)
     }
 
 //
