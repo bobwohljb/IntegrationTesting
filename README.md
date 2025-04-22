@@ -211,41 +211,6 @@ writeTestExecutionTime("testName", startTime, endTime)
 
 Test metrics are saved to CSV files in the `build/reports/metrics` directory for analysis.
 
-### Metrics Dashboard
-
-The project includes a React-based metrics dashboard for visualizing test performance data:
-
-```
-src/main/webapp/dashboard/
-```
-
-The dashboard provides:
-
-- **Bar Charts**: Visual representation of metrics for each test
-- **Interactive Table**: Detailed metrics with clickable rows to select tests
-- **Metric Selection**: Ability to switch between different metrics for visualization
-- **Test Filtering**: Option to view all tests or focus on individual tests
-
-To use the dashboard:
-
-1. Navigate to the dashboard directory:
-   ```bash
-   cd src/main/webapp/dashboard
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm start
-   ```
-
-4. Open your browser to `http://localhost:3000`
-
-The dashboard automatically loads metrics from the `build/reports/metrics/metrics.csv` file generated during test runs.
 
 ## Key Features
 
