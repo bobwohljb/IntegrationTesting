@@ -128,7 +128,7 @@ class PluginTest {
 
                 // Open the "MyKotlinInserter" side panel
                 actionButtonByXpath(xpath = xQuery { byAccessibleName("MyKotlinInserter") }).click()
-
+                //Thread.sleep(10.minutes.inWholeMilliseconds)
                 // Click the button to trigger the "Create Data Class File" flow
                 button { byText("Create Data Class File") }.click()
 
