@@ -39,6 +39,8 @@ import com.intellij.driver.sdk.ui.xQuery
 import com.intellij.ide.starter.examples.getMetricsFromSpanAndChildren
 import com.intellij.ide.starter.examples.writeMetricsToCSV
 import com.intellij.ide.starter.examples.writeTestExecutionTime
+import com.intellij.ide.starter.examples.writeDetailedMetricsToCSV
+import com.intellij.ide.starter.examples.writeMemoryMetricsToCSV
 import com.intellij.tools.ide.metrics.collector.telemetry.SpanFilter
 import java.time.Instant
 
@@ -67,8 +69,9 @@ class PluginTest {
     @Test
     fun installedPluginTest() {
         val startTime = Instant.now()
+        var endTime: Instant? = null
 
-        Starter.newContext("testExample", TestCase(IdeProductProvider.IC, NoProject).withVersion("2024.3")).apply {
+        val ideStartResult = Starter.newContext("testExample", TestCase(IdeProductProvider.IC, NoProject).withVersion("2024.3")).apply {
             PluginConfigurator(this).installPluginFromPath(Path(PLUGIN_PATH))
         }.runIdeWithDriver().useDriverAndCloseIde {
             welcomeScreen {
@@ -85,15 +88,28 @@ class PluginTest {
             }
         }
 
-        val endTime = Instant.now()
+        endTime = Instant.now()
+
+        // Write basic execution time metrics
         writeTestExecutionTime("installedPluginTest", startTime, endTime)
+
+        // Write memory metrics
+        writeMemoryMetricsToCSV("installedPluginTest", startTime, endTime)
+
+        // Write detailed metrics
+        try {
+            writeDetailedMetricsToCSV("installedPluginTest", startTime, endTime, ideStartResult)
+        } catch (e: Exception) {
+            println("Error writing detailed metrics: ${e.message}")
+        }
     }
 
     @Test
     fun testClickSidePanelAndCreateDataClassFile() {
         val startTime = Instant.now()
+        var endTime: Instant? = null
 
-        Starter.newContext(
+        val ideStartResult = Starter.newContext(
             "testCreateDataClassFile",
             TestCase(
                 IdeProductProvider.IC,
@@ -129,15 +145,28 @@ class PluginTest {
             }
         }
 
-        val endTime = Instant.now()
+        endTime = Instant.now()
+
+        // Write basic execution time metrics
         writeTestExecutionTime("testClickSidePanelAndCreateDataClassFile", startTime, endTime)
+
+        // Write memory metrics
+        writeMemoryMetricsToCSV("testClickSidePanelAndCreateDataClassFile", startTime, endTime)
+
+        // Write detailed metrics
+        try {
+            writeDetailedMetricsToCSV("testClickSidePanelAndCreateDataClassFile", startTime, endTime, ideStartResult)
+        } catch (e: Exception) {
+            println("Error writing detailed metrics: ${e.message}")
+        }
     }
 
     @Test
     fun testClickSidePanelAndCreateSingletonFile() {
         val startTime = Instant.now()
+        var endTime: Instant? = null
 
-        Starter.newContext(
+        val ideStartResult = Starter.newContext(
             "testCreateSingletonFile",
             TestCase(
                 IdeProductProvider.IC,
@@ -172,15 +201,28 @@ class PluginTest {
             }
         }
 
-        val endTime = Instant.now()
+        endTime = Instant.now()
+
+        // Write basic execution time metrics
         writeTestExecutionTime("testClickSidePanelAndCreateSingletonFile", startTime, endTime)
+
+        // Write memory metrics
+        writeMemoryMetricsToCSV("testClickSidePanelAndCreateSingletonFile", startTime, endTime)
+
+        // Write detailed metrics
+        try {
+            writeDetailedMetricsToCSV("testClickSidePanelAndCreateSingletonFile", startTime, endTime, ideStartResult)
+        } catch (e: Exception) {
+            println("Error writing detailed metrics: ${e.message}")
+        }
     }
 
     @Test
     fun testClickSidePanelAndCreateExtensionFunctionsFile() {
         val startTime = Instant.now()
+        var endTime: Instant? = null
 
-        Starter.newContext(
+        val ideStartResult = Starter.newContext(
             "testCreateExtensionFunctionsFile",
             TestCase(
                 IdeProductProvider.IC,
@@ -215,15 +257,28 @@ class PluginTest {
             }
         }
 
-        val endTime = Instant.now()
+        endTime = Instant.now()
+
+        // Write basic execution time metrics
         writeTestExecutionTime("testClickSidePanelAndCreateExtensionFunctionsFile", startTime, endTime)
+
+        // Write memory metrics
+        writeMemoryMetricsToCSV("testClickSidePanelAndCreateExtensionFunctionsFile", startTime, endTime)
+
+        // Write detailed metrics
+        try {
+            writeDetailedMetricsToCSV("testClickSidePanelAndCreateExtensionFunctionsFile", startTime, endTime, ideStartResult)
+        } catch (e: Exception) {
+            println("Error writing detailed metrics: ${e.message}")
+        }
     }
 
     @Test
     fun testClickSidePanelAndCreateCoroutinePatternsFile() {
         val startTime = Instant.now()
+        var endTime: Instant? = null
 
-        Starter.newContext(
+        val ideStartResult = Starter.newContext(
             "testCreateCoroutinePatternsFile",
             TestCase(
                 IdeProductProvider.IC,
@@ -258,8 +313,20 @@ class PluginTest {
             }
         }
 
-        val endTime = Instant.now()
+        endTime = Instant.now()
+
+        // Write basic execution time metrics
         writeTestExecutionTime("testClickSidePanelAndCreateCoroutinePatternsFile", startTime, endTime)
+
+        // Write memory metrics
+        writeMemoryMetricsToCSV("testClickSidePanelAndCreateCoroutinePatternsFile", startTime, endTime)
+
+        // Write detailed metrics
+        try {
+            writeDetailedMetricsToCSV("testClickSidePanelAndCreateCoroutinePatternsFile", startTime, endTime, ideStartResult)
+        } catch (e: Exception) {
+            println("Error writing detailed metrics: ${e.message}")
+        }
     }
 
 //

@@ -1,0 +1,32 @@
+{
+  "name": "metrics-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard for displaying metrics from integration tests",
+  "main": "index.js",
+  "scripts": {
+    "copy-metrics": "./public/copy-metrics.sh",
+    "start": "./public/copy-metrics.sh && react-scripts start",
+    "build": "./public/copy-metrics.sh && react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "recharts": "^2.7.2",
+    "papaparse": "^5.4.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

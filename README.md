@@ -55,7 +55,7 @@ The project uses the following main dependencies:
 
 ## Running Tests
 
-To run the integration tests:
+To run all integration tests:
 
 ```bash
 ./gradlew integrationTest
@@ -65,6 +65,96 @@ This will:
 1. Build the project
 2. Prepare the sandbox environment
 3. Run the integration tests defined in the `src/integrationTest` directory
+
+To run a specific test class or method:
+
+```bash
+# Run a specific test class
+./gradlew integrationTest --tests "PluginTest"
+
+# Run a specific test method
+./gradlew integrationTest --tests "PluginTest.installedPluginTest"
+```
+
+## Setting Up and Running PluginTest.kt
+
+The `PluginTest.kt` file contains integration tests for testing IntelliJ IDEA plugins. Here's how to set it up and run it:
+
+### Prerequisites
+
+1. JDK 17 or later (required by the project's Kotlin JVM toolchain)
+2. Gradle 8.0 or later
+3. IntelliJ IDEA 2024.3 (Community or Ultimate)
+4. A plugin to test (ZIP file)
+
+### Configuration
+
+1. **Plugin Path**: Update the `PLUGIN_PATH` constant in the `PluginTest` companion object to point to your plugin ZIP file:
+
+```kotlin
+private const val PLUGIN_PATH = "/path/to/your/plugin.zip"
+```
+
+2. **Test Project**: The tests use a GitHub project as the test environment. You can modify the GitHub project URL in each test method:
+
+```kotlin
+projectInfo = GitHubProject.fromGithub(
+    branchName = "main",
+    repoRelativeUrl = "your-username/your-repo"
+)
+```
+
+3. **IDE Version**: The tests are configured to use IntelliJ IDEA 2024.3. You can change the version in each test method:
+
+```kotlin
+TestCase(IdeProductProvider.IC, projectInfo = NoProject)
+    .withVersion("2024.3")
+```
+
+### Running PluginTest.kt
+
+To run all tests in PluginTest.kt:
+
+```bash
+./gradlew integrationTest --tests "PluginTest"
+```
+
+To run a specific test method:
+
+```bash
+./gradlew integrationTest --tests "PluginTest.installedPluginTest"
+```
+
+### Metrics Collection
+
+PluginTest.kt collects various performance metrics during test execution:
+
+1. **Basic Execution Time**: Each test records its start time, end time, and total execution time.
+2. **Memory Usage**: Tests collect memory metrics (used, total, max).
+3. **Detailed Metrics**: Tests collect additional metrics like CPU usage, startup time, indexing time, and UI responsiveness.
+
+All metrics are stored in CSV files in the `build/reports/metrics` directory:
+
+```
+build/reports/metrics/
+└── metrics.csv       # Consolidated metrics file
+```
+
+### Customizing Tests
+
+You can customize the tests in PluginTest.kt by:
+
+1. Modifying the UI interaction steps to match your plugin's UI
+2. Adding assertions to verify your plugin's behavior
+3. Adjusting wait times for specific operations
+4. Adding new test methods for additional plugin features
+
+### Troubleshooting
+
+- **Plugin Not Found**: Ensure the `PLUGIN_PATH` points to a valid plugin ZIP file
+- **GitHub Project Not Found**: Verify the GitHub repository URL and branch name
+- **Test Timeout**: Increase wait times for operations that take longer than expected
+- **UI Element Not Found**: Update the UI element selectors to match your plugin's UI
 
 ## Writing Tests
 
@@ -120,6 +210,42 @@ writeTestExecutionTime("testName", startTime, endTime)
 ```
 
 Test metrics are saved to CSV files in the `build/reports/metrics` directory for analysis.
+
+### Metrics Dashboard
+
+The project includes a React-based metrics dashboard for visualizing test performance data:
+
+```
+src/main/webapp/dashboard/
+```
+
+The dashboard provides:
+
+- **Bar Charts**: Visual representation of metrics for each test
+- **Interactive Table**: Detailed metrics with clickable rows to select tests
+- **Metric Selection**: Ability to switch between different metrics for visualization
+- **Test Filtering**: Option to view all tests or focus on individual tests
+
+To use the dashboard:
+
+1. Navigate to the dashboard directory:
+   ```bash
+   cd src/main/webapp/dashboard
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm start
+   ```
+
+4. Open your browser to `http://localhost:3000`
+
+The dashboard automatically loads metrics from the `build/reports/metrics/metrics.csv` file generated during test runs.
 
 ## Key Features
 
