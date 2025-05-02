@@ -34,6 +34,7 @@ val integrationTestImplementation by configurations.getting {
 dependencies {
     intellijPlatform {
         intellijIdeaCommunity("2024.3")
+        //intellijIdeaUltimate("2025.1")
         testFramework(TestFrameworkType.Starter)
     }
     integrationTestImplementation("com.jetbrains.intellij.tools:ide-metrics-collector:LATEST-EAP-SNAPSHOT")
@@ -48,8 +49,10 @@ dependencies {
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild.set("243")
-            untilBuild.set("243.*")
+//            sinceBuild.set("243")
+//            untilBuild.set("243.*")
+            sinceBuild.set("231")
+            untilBuild.set("999.*")
         }
     }
 }

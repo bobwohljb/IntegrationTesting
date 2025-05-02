@@ -51,12 +51,12 @@ class PluginTest {
      * - Asserts that the expected plugin is correctly installed and visible in the list.
      */
     @Test
-    fun installedPluginTest() {
+    fun installedPluginTest2() {
         val startTime = Instant.now()
         var endTime: Instant? = null
 
         val ideStartResult =
-            Starter.newContext("testExample", TestCase(IdeProductProvider.IC, NoProject).withVersion("2024.1")).apply {
+            Starter.newContext("testExample", TestCase(IdeProductProvider.IU, NoProject).useEAP()).apply {
                 PluginConfigurator(this).installPluginFromPath(Path(PLUGIN_PATH))
             }.runIdeWithDriver().useDriverAndCloseIde {
                 welcomeScreen {
@@ -89,14 +89,55 @@ class PluginTest {
         }
     }
 
+
+    @Test
+    fun installedPluginTest() {
+        val startTime = Instant.now()
+        var endTime: Instant? = null
+
+        val ideStartResult =
+            Starter.newContext("testExample", TestCase(IdeProductProvider.IU, NoProject).withVersion("2025.1")).apply {
+                PluginConfigurator(this).installPluginFromPath(Path(PLUGIN_PATH))
+            }.runIdeWithDriver().useDriverAndCloseIde {
+                welcomeScreen {
+                    clickPlugins()
+                    x { byAccessibleName("Installed") }.click()
+                    shouldBe("Plugin is installed") {
+                        x {
+                            and(
+                                byVisibleText("MyKotlinCodeInserter"),
+                                byJavaClass("javax.swing.JLabel")
+                            )
+                        }.present()
+                    }
+                }
+            }
+
+        endTime = Instant.now()
+
+        // Write basic execution time metrics
+        writeTestExecutionTime("installedPluginTest", startTime, endTime)
+
+        // Write memory metrics
+        writeMemoryMetricsToCSV("installedPluginTest", startTime, endTime)
+
+        // Write detailed metrics
+        try {
+            writeDetailedMetricsToCSV("installedPluginTest", startTime, endTime, ideStartResult)
+        } catch (e: Exception) {
+            println("Error writing detailed metrics: ${e.message}")
+        }
+    }
+
+
     @TestFactory
     fun testInstallPluginsFromMarketplaces(): Collection<DynamicTest> {
         val pluginIds = listOf(
             "Pythonid" to "Python",
             "org.intellij.scala" to "Scala" // This one might 404
         )
-
-        val ideVersions = listOf("2024.3", "2025.1")
+        //val ideVersions = listOf("2023.1", "2023.2", "2023.3", "2024.1", "2024.2", "2024.3")
+        val ideVersions = listOf("2024.2", "2024.3")
         val outputDir = Paths.get("build/reports/metrics")
 
         // Create directory if it doesn't exist
@@ -152,6 +193,7 @@ class PluginTest {
                                     x { byAccessibleName("Installed") }.click()
                                     println("Checking if plugin '$pluginText' is present")
                                     shouldBe("Plugin is installed") {
+                                        //Thread.sleep(10.minutes.inWholeMilliseconds)
                                         x {
                                             and(
                                                 byVisibleText(pluginText),
@@ -266,7 +308,7 @@ class PluginTest {
         val ideStartResult = Starter.newContext(
             "testCreateDataClassFile",
             TestCase(
-                IdeProductProvider.IC,
+                IdeProductProvider.IU,
                 projectInfo = GitHubProject.fromGithub(
                     branchName = "main",
                     repoRelativeUrl = "bobwohl/KotlinTestingPlayground"
@@ -323,7 +365,7 @@ class PluginTest {
         val ideStartResult = Starter.newContext(
             "testCreateSingletonFile",
             TestCase(
-                IdeProductProvider.IC,
+                IdeProductProvider.IU,
                 projectInfo = GitHubProject.fromGithub(
                     branchName = "main",
                     repoRelativeUrl = "bobwohl/KotlinTestingPlayground"
@@ -379,7 +421,7 @@ class PluginTest {
         val ideStartResult = Starter.newContext(
             "testCreateExtensionFunctionsFile",
             TestCase(
-                IdeProductProvider.IC,
+                IdeProductProvider.IU,
                 projectInfo = GitHubProject.fromGithub(
                     branchName = "main",
                     repoRelativeUrl = "bobwohl/KotlinTestingPlayground"
@@ -440,7 +482,7 @@ class PluginTest {
         val ideStartResult = Starter.newContext(
             "testCreateCoroutinePatternsFile",
             TestCase(
-                IdeProductProvider.IC,
+                IdeProductProvider.IU,
                 projectInfo = GitHubProject.fromGithub(
                     branchName = "main",
                     repoRelativeUrl = "bobwohl/KotlinTestingPlayground"
