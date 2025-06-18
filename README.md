@@ -215,8 +215,9 @@ Test metrics are saved to CSV files in the `build/reports/metrics` directory for
 
 Example metrics collected from test runs are available in the `metrics-examples` directory:
 
+- [View Metrics Report](https://htmlpreview.github.io/?https://github.com/bobwohljb/IntegrationTesting/blob/main/metrics-examples/metrics.html)
 - [metrics.csv](metrics-examples/metrics.csv) - Raw metrics data in CSV format
-- [metrics.html](metrics-examples/metrics.html) - HTML visualization of the metrics
+- [metrics.html](metrics-examples/metrics.html) - HTML source code for the visualization of the metrics
 
 These examples demonstrate the type of performance data collected during test execution, including:
 - Test execution time
