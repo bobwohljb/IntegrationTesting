@@ -211,6 +211,26 @@ writeTestExecutionTime("testName", startTime, endTime)
 
 Test metrics are saved to CSV files in the `build/reports/metrics` directory for analysis.
 
+## Example Metrics
+
+Example metrics collected from test runs are available in the `metrics-examples` directory:
+
+- [metrics.csv](metrics-examples/metrics.csv) - Raw metrics data in CSV format
+- [metrics.html](metrics-examples/metrics.html) - HTML visualization of the metrics
+
+These examples demonstrate the type of performance data collected during test execution, including:
+- Test execution time
+- Memory usage (used, total, max)
+- CPU usage
+- Startup time
+- Indexing time
+- UI responsiveness
+
+You can use these metrics to:
+1. Establish performance baselines for your plugin
+2. Identify performance regressions
+3. Compare performance across different plugin versions
+4. Optimize resource-intensive operations
 
 ## Key Features
 
