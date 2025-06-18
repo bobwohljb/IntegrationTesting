@@ -8,7 +8,7 @@ import org.jetbrains.intellij.platform.gradle.tasks.*
 
 plugins {
     id("org.jetbrains.intellij.platform") version "2.2.1"
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm") version "2.1.0"
 }
 
 repositories {

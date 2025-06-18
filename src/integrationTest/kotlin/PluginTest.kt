@@ -27,6 +27,7 @@ import com.intellij.ide.starter.models.IDEStartResult
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.Assertions.fail
+import java.io.File
 import java.nio.file.Files
 import java.time.Duration
 
@@ -535,6 +536,120 @@ class PluginTest {
         }
     }
 
+    @Test
+    fun testIDEStartupGitCloneAndIndexing():Unit {
+        val testStartTime = Instant.now()
+
+        // Phase 1: IDE Startup
+        println("Phase 1: IDE Startup")
+        val startupStartTime = Instant.now()
+        val result = Starter.newContext(
+            testName = "StartupGitCloneIndexing",
+            testCase = TestCase(IdeProductProvider.IU, projectInfo = NoProject).withVersion("2024.3")
+        ).runIdeWithDriver().useDriverAndCloseIde {
+            ideFrame {
+                // Just start the IDE without a project
+                println("IDE started successfully.")
+            }
+        }
+        val startupEndTime = Instant.now()
+
+        // Write startup metrics
+        writeTestExecutionTime("IDEStartupPhase", startupStartTime, startupEndTime)
+        writeDetailedMetricsToCSV("IDEStartupPhase", startupStartTime, startupEndTime, result)
+        println("IDE Startup phase completed. Metrics written to CSV.")
+
+        // Phase 2: Git Cloning
+        println("Phase 2: Git Cloning")
+        val gitStartTime = Instant.now()
+        val repoUrl = "https://github.com/bobwohl/KotlinTestingPlayground.git"
+        val cloneDir =
+            File(System.getProperty("java.io.tmpdir"), "KotlinTestingPlayground-${System.currentTimeMillis()}")
+        cloneDir.mkdirs()
+
+        // Execute git clone command
+        val process = ProcessBuilder("git", "clone", repoUrl, cloneDir.absolutePath)
+            .redirectErrorStream(true)
+            .start()
+
+        // Read output
+        val output = process.inputStream.bufferedReader().use { it.readText() }
+        val exitCode = process.waitFor()
+
+        if (exitCode != 0) {
+            println("Git clone failed with exit code $exitCode")
+            println("Output: $output")
+            throw RuntimeException("Git clone failed")
+        }
+
+        val gitEndTime = Instant.now()
+        val gitCloneTimeMs = java.time.Duration.between(gitStartTime, gitEndTime).toMillis()
+
+        // Write Git clone metrics
+        writeTestExecutionTime("GitClonePhase", gitStartTime, gitEndTime)
+
+        // Write Git clone metrics to consolidated file
+        com.intellij.ide.starter.examples.writeToConsolidatedMetricsFile("GitCloneMetrics", mapOf(
+            "GitCloneTimeMs" to gitCloneTimeMs,
+            "RepoUrl" to repoUrl,
+            "CloneDirectory" to cloneDir.absolutePath
+        ))
+        println("Git Clone phase completed. Metrics written to CSV.")
+
+        // Phase 3: Indexing
+        println("Phase 3: Indexing")
+        val indexingStartTime = Instant.now()
+
+        // Open the cloned project in IDE using the GitHub URL instead of local directory
+        // since fromLocalDirectory is not available
+        val indexingResult = Starter.newContext(
+            testName = "IndexingPhase",
+            testCase = TestCase(
+                IdeProductProvider.IU,
+                projectInfo = GitHubProject.fromGithub(
+                    branchName = "main",
+                    repoRelativeUrl = "bobwohl/KotlinTestingPlayground"
+                )
+            ).withVersion("2024.3")
+        ).runIdeWithDriver().useDriverAndCloseIde {
+            ideFrame {
+                // Wait for indexing to complete
+                waitForIndicators(2.minutes)
+                println("Indexing completed successfully.")
+            }
+        }
+
+        val indexingEndTime = Instant.now()
+
+        // Write indexing metrics
+        writeTestExecutionTime("IndexingPhase", indexingStartTime, indexingEndTime)
+        writeDetailedMetricsToCSV("IndexingPhase", indexingStartTime, indexingEndTime, indexingResult)
+        println("Indexing phase completed. Metrics written to CSV.")
+
+        // Overall test metrics
+        val testEndTime = Instant.now()
+        writeTestExecutionTime("StartupGitCloneIndexingTest", testStartTime, testEndTime)
+
+        // Write memory metrics
+        writeMemoryMetricsToCSV("StartupGitCloneIndexingTest", testStartTime, testEndTime)
+
+        // Write detailed metrics for the entire test
+        try {
+            writeDetailedMetricsToCSV("StartupGitCloneIndexingTest", testStartTime, testEndTime, result)
+        } catch (e: Exception) {
+            println("Error writing detailed metrics: ${e.message}")
+        }
+
+        println("Test completed. Metrics are stored in build/reports/metrics.")
+
+        // Clean up
+        try {
+            cloneDir.deleteRecursively()
+            println("Cleaned up temporary clone directory.")
+        } catch (e: Exception) {
+            println("Warning: Failed to clean up temporary directory: ${e.message}")
+        }
+    }
 }
 
 
@@ -597,117 +712,3 @@ class PluginTest {
 //        }
 //    }
 //
-//    @Test
-//    fun testIDEStartupGitCloneAndIndexing() {
-//        val testStartTime = Instant.now()
-//
-//        // Phase 1: IDE Startup
-//        println("Phase 1: IDE Startup")
-//        val startupStartTime = Instant.now()
-//        val result = Starter.newContext(
-//            testName = "StartupGitCloneIndexing",
-//            testCase = TestCase(IdeProductProvider.IU, projectInfo = NoProject).withVersion("2024.3")
-//        ).runIdeWithDriver().useDriverAndCloseIde {
-//            ideFrame {
-//                // Just start the IDE without a project
-//                println("IDE started successfully.")
-//            }
-//        }
-//        val startupEndTime = Instant.now()
-//
-//        // Write startup metrics
-//        writeTestExecutionTime("IDEStartupPhase", startupStartTime, startupEndTime)
-//        writeDetailedMetricsToCSV("IDEStartupPhase", startupStartTime, startupEndTime, result)
-//        println("IDE Startup phase completed. Metrics written to CSV.")
-//
-//        // Phase 2: Git Cloning
-//        println("Phase 2: Git Cloning")
-//        val gitStartTime = Instant.now()
-//        val repoUrl = "https://github.com/bobwohl/KotlinTestingPlayground.git"
-//        val cloneDir = File(System.getProperty("java.io.tmpdir"), "KotlinTestingPlayground-${System.currentTimeMillis()}")
-//        cloneDir.mkdirs()
-//
-//        // Execute git clone command
-//        val process = ProcessBuilder("git", "clone", repoUrl, cloneDir.absolutePath)
-//            .redirectErrorStream(true)
-//            .start()
-//
-//        // Read output
-//        val output = process.inputStream.bufferedReader().use { it.readText() }
-//        val exitCode = process.waitFor()
-//
-//        if (exitCode != 0) {
-//            println("Git clone failed with exit code $exitCode")
-//            println("Output: $output")
-//            throw RuntimeException("Git clone failed")
-//        }
-//
-//        val gitEndTime = Instant.now()
-//        val gitCloneTimeMs = java.time.Duration.between(gitStartTime, gitEndTime).toMillis()
-//
-//        // Write Git clone metrics
-//        writeTestExecutionTime("GitClonePhase", gitStartTime, gitEndTime)
-//
-//        // Write Git clone metrics to consolidated file
-//        com.intellij.ide.starter.examples.writeToConsolidatedMetricsFile("GitCloneMetrics", mapOf(
-//            "GitCloneTimeMs" to gitCloneTimeMs,
-//            "RepoUrl" to repoUrl,
-//            "CloneDirectory" to cloneDir.absolutePath
-//        ))
-//        println("Git Clone phase completed. Metrics written to CSV.")
-//
-//        // Phase 3: Indexing
-//        println("Phase 3: Indexing")
-//        val indexingStartTime = Instant.now()
-//
-//        // Open the cloned project in IDE using the GitHub URL instead of local directory
-//        // since fromLocalDirectory is not available
-//        val indexingResult = Starter.newContext(
-//            testName = "IndexingPhase",
-//            testCase = TestCase(
-//                IdeProductProvider.IU,
-//                projectInfo = GitHubProject.fromGithub(
-//                    branchName = "main",
-//                    repoRelativeUrl = "bobwohl/KotlinTestingPlayground"
-//                )
-//            ).withVersion("2024.3")
-//        ).runIdeWithDriver().useDriverAndCloseIde {
-//            ideFrame {
-//                // Wait for indexing to complete
-//                waitForIndicators(2.minutes)
-//                println("Indexing completed successfully.")
-//            }
-//        }
-//
-//        val indexingEndTime = Instant.now()
-//
-//        // Write indexing metrics
-//        writeTestExecutionTime("IndexingPhase", indexingStartTime, indexingEndTime)
-//        writeDetailedMetricsToCSV("IndexingPhase", indexingStartTime, indexingEndTime, indexingResult)
-//        println("Indexing phase completed. Metrics written to CSV.")
-//
-//        // Overall test metrics
-//        val testEndTime = Instant.now()
-//        writeTestExecutionTime("StartupGitCloneIndexingTest", testStartTime, testEndTime)
-//
-//        // Write memory metrics
-//        writeMemoryMetricsToCSV("StartupGitCloneIndexingTest", testStartTime, testEndTime)
-//
-//        // Write detailed metrics for the entire test
-//        try {
-//            writeDetailedMetricsToCSV("StartupGitCloneIndexingTest", testStartTime, testEndTime, result)
-//        } catch (e: Exception) {
-//            println("Error writing detailed metrics: ${e.message}")
-//        }
-//
-//        println("Test completed. Metrics are stored in build/reports/metrics.")
-//
-//        // Clean up
-//        try {
-//            cloneDir.deleteRecursively()
-//            println("Cleaned up temporary clone directory.")
-//        } catch (e: Exception) {
-//            println("Warning: Failed to clean up temporary directory: ${e.message}")
-//        }
-//    }
-//}
