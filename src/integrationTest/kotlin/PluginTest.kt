@@ -535,7 +535,7 @@ class PluginTest {
             println("Error writing detailed metrics: ${e.message}")
         }
     }
-
+    
     @Test
     fun testIDEStartupGitCloneAndIndexing():Unit {
         val testStartTime = Instant.now()
@@ -651,64 +651,3 @@ class PluginTest {
         }
     }
 }
-
-
-
-//
-//    @Test
-//    fun testActionsDataclass() {
-//        Starter.newContext(
-//            testName = "testExampleDataClass", TestCase(
-//                IdeProductProvider.IU, projectInfo = GitHubProject.fromGithub(branchName = "main", repoRelativeUrl = "bobwohl/KotlinTestingPlayground")
-//            ).withVersion("2024.3")
-//        ).apply {
-//            PluginConfigurator(this).installPluginFromPath(Path(PLUGIN_PATH))
-//        }.runIdeWithDriver().useDriverAndCloseIde {
-//            Thread.sleep(60_000)
-//            waitForIndicators(1.minutes)
-//
-//            openFile("src/main/kotlin/Main.kt")
-//            // Wait to make sure file is fully loaded
-//            waitForIndicators(10.seconds)
-//
-//            ideFrame {
-//                invokeAction("MyKotlinSnippets.DataClass", now = false)
-//
-//                // Wait a moment for the action to be processed
-//                Thread.sleep(1000)
-//
-//                waitForNoOpenedDialogs()
-//                Thread.sleep(10.minutes.inWholeMilliseconds)
-//                invokeAction("CloseProject", now = false)
-//            }
-//        }
-//    }
-//
-//    @Test
-//    fun testActionsSingleton() {
-//        Starter.newContext(
-//            testName = "testExampleSingleton", TestCase(
-//                IdeProductProvider.IU, projectInfo = GitHubProject.fromGithub(branchName = "main", repoRelativeUrl = "bobwohl/KotlinTestingPlayground")
-//            ).withVersion("2024.3")
-//        ).apply {
-//            PluginConfigurator(this).installPluginFromPath(Path(PLUGIN_PATH))
-//        }.runIdeWithDriver().useDriverAndCloseIde {
-//            Thread.sleep(10_000)
-//            waitForIndicators(1.minutes)
-//
-//            openFile("src/main/kotlin/Main.kt")
-//            // Wait to make sure file is fully loaded
-//            waitForIndicators(10.seconds)
-//
-//            ideFrame {
-//                invokeAction("MyKotlinSnippets.Singleton", now = false)
-//
-//                // Wait a moment for the action to be processed
-//                Thread.sleep(1000)
-//
-//                //Do something here
-//                invokeAction("CloseProject", now = false)
-//            }
-//        }
-//    }
-//
