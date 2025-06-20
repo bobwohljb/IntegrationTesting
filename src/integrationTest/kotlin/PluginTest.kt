@@ -610,6 +610,16 @@ class PluginTest {
             // Write the HTML report
             reportFile.writeText(htmlContent)
             println("Version comparison report generated at: ${reportFile.absolutePath}")
+
+            // Copy the report to metrics-examples directory
+            val metricsExamplesDir = Paths.get("metrics-examples")
+            if (Files.exists(metricsExamplesDir)) {
+                val targetFile = metricsExamplesDir.resolve("metrics_comparison.html").toFile()
+                reportFile.copyTo(targetFile, overwrite = true)
+                println("Copied metrics comparison report to: ${targetFile.absolutePath}")
+            } else {
+                println("Warning: metrics-examples directory not found, skipping copy operation")
+            }
         } catch (e: Exception) {
             println("Error generating version comparison report: ${e.message}")
             e.printStackTrace()
@@ -871,6 +881,15 @@ class PluginTest {
                 } else {
                     // For each test, create a comparison table
                     for (testName in allTestNames) {
+                        // Filter versions to only those that have data for this specific test
+                        val versionsWithDataForTest = versionsWithData.filter { version ->
+                            versionMetrics[version]?.containsKey(testName) == true &&
+                            versionMetrics[version]?.get(testName)?.isNotEmpty() == true
+                        }.sorted()
+
+                        // Skip this test if no versions have data for it
+                        if (versionsWithDataForTest.isEmpty()) continue
+
                         append("""
                             <h3>$testName</h3>
                             <table>
@@ -878,13 +897,13 @@ class PluginTest {
                                     <th>Metric</th>
                         """.trimIndent())
 
-                        // Add version headers (only for versions with data)
-                        versionsWithData.sorted().forEach { version ->
+                        // Add version headers (only for versions with data for this test)
+                        versionsWithDataForTest.forEach { version ->
                             append("<th>$version</th>")
                         }
 
-                        // If we have at least two versions with data, add a comparison column
-                        if (versionsWithData.size >= 2) {
+                        // If we have at least two versions with data for this test, add a comparison column
+                        if (versionsWithDataForTest.size >= 2) {
                             append("<th>Change</th>")
                         }
 
@@ -902,8 +921,8 @@ class PluginTest {
                         for (metric in allMetrics) {
                             append("<tr><td>$metric</td>")
 
-                            // Get the versions in order (only those with data)
-                            val orderedVersions = versionsWithData.sorted()
+                            // Get the versions in order (only those with data for this test)
+                            val orderedVersions = versionsWithDataForTest
                             var firstVersionValue: Double? = null
                             var lastVersionValue: Double? = null
                             var versionsWithThisMetric = 0
@@ -927,8 +946,8 @@ class PluginTest {
                                 }
                             }
 
-                            // Add comparison column if we have at least two versions with data
-                            if (versionsWithData.size >= 2) {
+                            // Add comparison column if we have at least two versions with data for this test
+                            if (versionsWithDataForTest.size >= 2) {
                                 if (firstVersionValue != null && lastVersionValue != null && versionsWithThisMetric >= 2) {
                                     val change = lastVersionValue - firstVersionValue
                                     val percentChange = (change / firstVersionValue) * 100
