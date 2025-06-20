@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Assertions.fail
 import java.io.File
 import java.nio.file.Files
 import java.time.Duration
+import java.util.stream.Stream
 
 
 class PluginTest {
@@ -535,36 +536,442 @@ class PluginTest {
             println("Error writing detailed metrics: ${e.message}")
         }
     }
-    
+
     @Test
-    fun testIDEStartupGitCloneAndIndexing():Unit {
+    fun testIDEStartupGitCloneAndIndexing() {
+        runStartupGitCloneAndIndexingTest("2024.3", "StartupGitCloneIndexingTest")
+    }
+
+    @TestFactory
+    fun testIDEStartupGitCloneAndIndexingAcrossVersions(): Stream<DynamicTest> {
+        val ideVersions = listOf("2024.3", "2025.1")
+
+        // Generate a test for each version
+        val tests = ideVersions.stream().map { version ->
+            DynamicTest.dynamicTest("Test IDE Startup, Git Clone and Indexing with version $version") {
+                runStartupGitCloneAndIndexingTest(version, "StartupGitCloneIndexingTest_$version")
+            }
+        }
+
+        // Generate a final test that creates the comparison report
+        val comparisonTest = DynamicTest.dynamicTest("Generate Version Comparison Report") {
+            generateVersionComparisonReport(ideVersions)
+        }
+
+        // Combine the version tests with the comparison report test
+        return Stream.concat(tests, Stream.of(comparisonTest))
+    }
+
+    private fun generateVersionComparisonReport(ideVersions: List<String>) {
+        println("Generating version comparison report for versions: ${ideVersions.joinToString(", ")}")
+
+        // Create metrics directory if it doesn't exist
+        val metricsDir = Paths.get("build/reports/metrics")
+        Files.createDirectories(metricsDir)
+
+        // Path to the comparison report
+        val reportFile = metricsDir.resolve("metrics_comparison.html").toFile()
+
+        try {
+            // Collect metrics for each version
+            val versionMetrics = mutableMapOf<String, Map<String, Map<String, Any>>>()
+
+            // For each version, read the metrics from the CSV file
+            for (version in ideVersions) {
+                val versionDir = metricsDir.resolve("version_$version")
+                val csvFile = versionDir.resolve("metrics.csv").toFile()
+
+                if (csvFile.exists()) {
+                    val metrics = readMetricsFromCSV(csvFile, version)
+                    versionMetrics[version] = metrics
+                } else {
+                    println("Warning: No metrics file found for version $version at ${csvFile.absolutePath}")
+                }
+            }
+
+            // Generate the HTML report
+            val htmlContent = generateComparisonHTML(versionMetrics)
+
+            // Write the HTML report
+            reportFile.writeText(htmlContent)
+            println("Version comparison report generated at: ${reportFile.absolutePath}")
+        } catch (e: Exception) {
+            println("Error generating version comparison report: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    private fun readMetricsFromCSV(csvFile: File, version: String): Map<String, Map<String, Any>> {
+        val metrics = mutableMapOf<String, MutableMap<String, Any>>()
+
+        try {
+            val lines = csvFile.readLines()
+            if (lines.size > 1) {
+                val headers = lines[0].split(",")
+
+                for (i in 1 until lines.size) {
+                    val values = lines[i].split(",")
+                    if (values.isNotEmpty() && values.size >= headers.size) {
+                        val testName = values[0]
+                        val testMetrics = mutableMapOf<String, Any>()
+
+                        for (j in 1 until headers.size) {
+                            if (j < values.size) {
+                                val value = values[j]
+                                if (value.isNotEmpty()) {
+                                    // Try to convert to numeric if possible
+                                    try {
+                                        if (value.contains(".")) {
+                                            testMetrics[headers[j]] = value.toDouble()
+                                        } else {
+                                            testMetrics[headers[j]] = value.toLong()
+                                        }
+                                    } catch (e: NumberFormatException) {
+                                        testMetrics[headers[j]] = value
+                                    }
+                                }
+                            }
+                        }
+
+                        metrics[testName] = testMetrics
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            println("Error reading metrics from CSV for version $version: ${e.message}")
+        }
+
+        return metrics
+    }
+
+    private fun generateComparisonHTML(versionMetrics: Map<String, Map<String, Map<String, Any>>>): String {
+        return buildString {
+            append("""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>IDE Performance Comparison</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1, h2, h3 { color: #333; }
+                        .container { margin-bottom: 30px; }
+                        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; position: sticky; top: 0; }
+                        tr:nth-child(even) { background-color: #f9f9f9; }
+                        tr:hover { background-color: #f1f1f1; }
+                        .improvement { color: green; }
+                        .regression { color: red; }
+                        .chart-container { width: 100%; height: 400px; margin-bottom: 30px; }
+                    </style>
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                </head>
+                <body>
+                    <h1>IDE Performance Comparison</h1>
+                    <p>Generated on ${java.time.LocalDateTime.now()}</p>
+            """.trimIndent())
+
+            // Add summary section
+            append("""
+                    <div class="container">
+                        <h2>Performance Summary</h2>
+                        <table>
+                            <tr>
+                                <th>Metric</th>
+            """.trimIndent())
+
+            // Add version headers
+            versionMetrics.keys.forEach { version ->
+                append("<th>$version</th>")
+            }
+
+            // If we have at least two versions, add a comparison column
+            if (versionMetrics.size >= 2) {
+                append("<th>Change</th>")
+            }
+
+            append("</tr>")
+
+            // Add key metrics rows
+            val keyMetrics = listOf(
+                "ExecutionTimeMs" to "Total Execution Time (ms)",
+                "StartupTimeMs" to "IDE Startup Time (ms)",
+                "GitCloneTimeMs" to "Git Clone Time (ms)",
+                "IndexingTimeMs" to "Indexing Time (ms)",
+                "MaxMemoryMB" to "Max Memory (MB)"
+            )
+
+            for ((metricKey, metricLabel) in keyMetrics) {
+                append("<tr><td>$metricLabel</td>")
+
+                // Get the versions in order (assuming we want to compare the first version with the last)
+                val orderedVersions = versionMetrics.keys.sorted()
+                var firstVersionValue: Double? = null
+                var lastVersionValue: Double? = null
+
+                // Add values for each version
+                for (version in orderedVersions) {
+                    val versionData = versionMetrics[version]
+                    val value = findMetricValue(versionData, metricKey)
+
+                    if (value != null) {
+                        append("<td>${formatValue(value)}</td>")
+
+                        if (firstVersionValue == null) {
+                            firstVersionValue = value.toString().toDoubleOrNull()
+                        }
+                        lastVersionValue = value.toString().toDoubleOrNull()
+                    } else {
+                        append("<td>N/A</td>")
+                    }
+                }
+
+                // Add comparison column if we have at least two versions
+                if (versionMetrics.size >= 2 && firstVersionValue != null && lastVersionValue != null) {
+                    val change = lastVersionValue - firstVersionValue
+                    val percentChange = (change / firstVersionValue) * 100
+
+                    val changeClass = when {
+                        // For execution time, indexing time, etc., lower is better
+                        metricKey in listOf("ExecutionTimeMs", "StartupTimeMs", "GitCloneTimeMs", "IndexingTimeMs") -> {
+                            if (change < 0) "improvement" else if (change > 0) "regression" else ""
+                        }
+                        // For memory, it depends on the context, but generally lower is better
+                        else -> {
+                            if (change < 0) "improvement" else if (change > 0) "regression" else ""
+                        }
+                    }
+
+                    append("<td class=\"$changeClass\">${formatChange(change, percentChange)}</td>")
+                } else if (versionMetrics.size >= 2) {
+                    append("<td>N/A</td>")
+                }
+
+                append("</tr>")
+            }
+
+            append("</table></div>")
+
+            // Add charts for key metrics
+            append("""
+                    <div class="container">
+                        <h2>Performance Charts</h2>
+            """.trimIndent())
+
+            // Create a chart for each key metric
+            for ((metricKey, metricLabel) in keyMetrics) {
+                val chartId = "chart_${metricKey}"
+
+                append("""
+                        <h3>$metricLabel</h3>
+                        <div class="chart-container">
+                            <canvas id="$chartId"></canvas>
+                        </div>
+                """.trimIndent())
+            }
+
+            append("</div>")
+
+            // Add detailed metrics section
+            append("""
+                    <div class="container">
+                        <h2>Detailed Metrics</h2>
+            """.trimIndent())
+
+            // Get all test names across all versions
+            val allTestNames = versionMetrics.values.flatMap { it.keys }.distinct().sorted()
+
+            // For each test, create a comparison table
+            for (testName in allTestNames) {
+                append("""
+                        <h3>$testName</h3>
+                        <table>
+                            <tr>
+                                <th>Metric</th>
+                """.trimIndent())
+
+                // Add version headers
+                versionMetrics.keys.forEach { version ->
+                    append("<th>$version</th>")
+                }
+
+                // If we have at least two versions, add a comparison column
+                if (versionMetrics.size >= 2) {
+                    append("<th>Change</th>")
+                }
+
+                append("</tr>")
+
+                // Get all metrics for this test across all versions
+                val allMetrics = versionMetrics.values
+                    .flatMap { versionData -> 
+                        versionData[testName]?.keys ?: emptyList() 
+                    }
+                    .distinct()
+                    .sorted()
+
+                // Add a row for each metric
+                for (metric in allMetrics) {
+                    append("<tr><td>$metric</td>")
+
+                    // Get the versions in order
+                    val orderedVersions = versionMetrics.keys.sorted()
+                    var firstVersionValue: Double? = null
+                    var lastVersionValue: Double? = null
+
+                    // Add values for each version
+                    for (version in orderedVersions) {
+                        val versionData = versionMetrics[version]
+                        val testData = versionData?.get(testName)
+                        val value = testData?.get(metric)
+
+                        if (value != null) {
+                            append("<td>${formatValue(value)}</td>")
+
+                            if (firstVersionValue == null) {
+                                firstVersionValue = value.toString().toDoubleOrNull()
+                            }
+                            lastVersionValue = value.toString().toDoubleOrNull()
+                        } else {
+                            append("<td>N/A</td>")
+                        }
+                    }
+
+                    // Add comparison column if we have at least two versions
+                    if (versionMetrics.size >= 2 && firstVersionValue != null && lastVersionValue != null) {
+                        val change = lastVersionValue - firstVersionValue
+                        val percentChange = (change / firstVersionValue) * 100
+
+                        val changeClass = when {
+                            // For execution time, indexing time, etc., lower is better
+                            metric.contains("Time") || metric.contains("Duration") -> {
+                                if (change < 0) "improvement" else if (change > 0) "regression" else ""
+                            }
+                            // For memory, it depends on the context, but generally lower is better
+                            metric.contains("Memory") -> {
+                                if (change < 0) "improvement" else if (change > 0) "regression" else ""
+                            }
+                            // For other metrics, we don't know if higher or lower is better
+                            else -> ""
+                        }
+
+                        append("<td class=\"$changeClass\">${formatChange(change, percentChange)}</td>")
+                    } else if (versionMetrics.size >= 2) {
+                        append("<td>N/A</td>")
+                    }
+
+                    append("</tr>")
+                }
+
+                append("</table>")
+            }
+
+            append("</div>")
+
+            // Add JavaScript for charts
+            append("<script>")
+
+            // Create a chart for each key metric
+            for ((metricKey, metricLabel) in keyMetrics) {
+                val chartId = "chart_${metricKey}"
+                val labels = versionMetrics.keys.sorted()
+                val data = labels.map { version ->
+                    findMetricValue(versionMetrics[version], metricKey)?.toString()?.toDoubleOrNull() ?: 0.0
+                }
+
+                append("""
+                    new Chart(document.getElementById('$chartId'), {
+                        type: 'bar',
+                        data: {
+                            labels: ${labels.map { "'$it'" }},
+                            datasets: [{
+                                label: '$metricLabel',
+                                data: $data,
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: '${if (metricKey.contains("Memory")) "MB" else "ms"}'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                """.trimIndent())
+            }
+
+            append("</script>")
+
+            append("""
+                </body>
+                </html>
+            """.trimIndent())
+        }
+    }
+
+    private fun findMetricValue(versionData: Map<String, Map<String, Any>>?, metricKey: String): Any? {
+        // Look for the metric in all test results
+        versionData?.forEach { (_, metrics) ->
+            metrics[metricKey]?.let { return it }
+        }
+        return null
+    }
+
+    private fun formatValue(value: Any): String {
+        return when (value) {
+            is Double -> String.format("%.2f", value)
+            is Float -> String.format("%.2f", value)
+            else -> value.toString()
+        }
+    }
+
+    private fun formatChange(change: Double, percentChange: Double): String {
+        val sign = if (change >= 0) "+" else ""
+        return "$sign${String.format("%.2f", change)} (${sign}${String.format("%.2f", percentChange)}%)"
+    }
+
+    private fun runStartupGitCloneAndIndexingTest(ideVersion: String, testName: String) {
         val testStartTime = Instant.now()
+        val versionDir = "version_$ideVersion"
+
+        // Create version-specific directory for metrics
+        val metricsDir = Paths.get("build/reports/metrics/$versionDir")
+        Files.createDirectories(metricsDir)
 
         // Phase 1: IDE Startup
-        println("Phase 1: IDE Startup")
+        println("Phase 1: IDE Startup for version $ideVersion")
         val startupStartTime = Instant.now()
         val result = Starter.newContext(
-            testName = "StartupGitCloneIndexing",
-            testCase = TestCase(IdeProductProvider.IU, projectInfo = NoProject).withVersion("2024.3")
+            testName = "${testName}_Startup",
+            testCase = TestCase(IdeProductProvider.IU, projectInfo = NoProject).withVersion(ideVersion)
         ).runIdeWithDriver().useDriverAndCloseIde {
             ideFrame {
                 // Just start the IDE without a project
-                println("IDE started successfully.")
+                println("IDE $ideVersion started successfully.")
             }
         }
         val startupEndTime = Instant.now()
 
         // Write startup metrics
-        writeTestExecutionTime("IDEStartupPhase", startupStartTime, startupEndTime)
-        writeDetailedMetricsToCSV("IDEStartupPhase", startupStartTime, startupEndTime, result)
-        println("IDE Startup phase completed. Metrics written to CSV.")
+        writeTestExecutionTime("IDEStartupPhase_$ideVersion", startupStartTime, startupEndTime, versionDir)
+        writeDetailedMetricsToCSV("IDEStartupPhase_$ideVersion", startupStartTime, startupEndTime, result, versionDir)
+        println("IDE Startup phase completed for version $ideVersion. Metrics written to CSV.")
 
         // Phase 2: Git Cloning
-        println("Phase 2: Git Cloning")
+        println("Phase 2: Git Cloning for version $ideVersion")
         val gitStartTime = Instant.now()
         val repoUrl = "https://github.com/bobwohl/KotlinTestingPlayground.git"
         val cloneDir =
-            File(System.getProperty("java.io.tmpdir"), "KotlinTestingPlayground-${System.currentTimeMillis()}")
+            File(System.getProperty("java.io.tmpdir"), "KotlinTestingPlayground-${ideVersion}-${System.currentTimeMillis()}")
         cloneDir.mkdirs()
 
         // Execute git clone command
@@ -586,68 +993,68 @@ class PluginTest {
         val gitCloneTimeMs = java.time.Duration.between(gitStartTime, gitEndTime).toMillis()
 
         // Write Git clone metrics
-        writeTestExecutionTime("GitClonePhase", gitStartTime, gitEndTime)
+        writeTestExecutionTime("GitClonePhase_$ideVersion", gitStartTime, gitEndTime, versionDir)
 
         // Write Git clone metrics to consolidated file
-        com.intellij.ide.starter.examples.writeToConsolidatedMetricsFile("GitCloneMetrics", mapOf(
+        com.intellij.ide.starter.examples.writeToConsolidatedMetricsFile("GitCloneMetrics_$ideVersion", mapOf(
             "GitCloneTimeMs" to gitCloneTimeMs,
             "RepoUrl" to repoUrl,
             "CloneDirectory" to cloneDir.absolutePath
-        ))
-        println("Git Clone phase completed. Metrics written to CSV.")
+        ), versionDir)
+        println("Git Clone phase completed for version $ideVersion. Metrics written to CSV.")
 
         // Phase 3: Indexing
-        println("Phase 3: Indexing")
+        println("Phase 3: Indexing for version $ideVersion")
         val indexingStartTime = Instant.now()
 
         // Open the cloned project in IDE using the GitHub URL instead of local directory
         // since fromLocalDirectory is not available
         val indexingResult = Starter.newContext(
-            testName = "IndexingPhase",
+            testName = "${testName}_Indexing",
             testCase = TestCase(
                 IdeProductProvider.IU,
                 projectInfo = GitHubProject.fromGithub(
                     branchName = "main",
                     repoRelativeUrl = "bobwohl/KotlinTestingPlayground"
                 )
-            ).withVersion("2024.3")
+            ).withVersion(ideVersion)
         ).runIdeWithDriver().useDriverAndCloseIde {
             ideFrame {
                 // Wait for indexing to complete
                 waitForIndicators(2.minutes)
-                println("Indexing completed successfully.")
+                println("Indexing completed successfully for version $ideVersion.")
             }
         }
 
         val indexingEndTime = Instant.now()
 
         // Write indexing metrics
-        writeTestExecutionTime("IndexingPhase", indexingStartTime, indexingEndTime)
-        writeDetailedMetricsToCSV("IndexingPhase", indexingStartTime, indexingEndTime, indexingResult)
-        println("Indexing phase completed. Metrics written to CSV.")
+        writeTestExecutionTime("IndexingPhase_$ideVersion", indexingStartTime, indexingEndTime, versionDir)
+        writeDetailedMetricsToCSV("IndexingPhase_$ideVersion", indexingStartTime, indexingEndTime, indexingResult, versionDir)
+        println("Indexing phase completed for version $ideVersion. Metrics written to CSV.")
 
         // Overall test metrics
         val testEndTime = Instant.now()
-        writeTestExecutionTime("StartupGitCloneIndexingTest", testStartTime, testEndTime)
+        writeTestExecutionTime("${testName}_Overall", testStartTime, testEndTime, versionDir)
 
         // Write memory metrics
-        writeMemoryMetricsToCSV("StartupGitCloneIndexingTest", testStartTime, testEndTime)
+        writeMemoryMetricsToCSV("${testName}_Overall", testStartTime, testEndTime, versionDir)
 
         // Write detailed metrics for the entire test
         try {
-            writeDetailedMetricsToCSV("StartupGitCloneIndexingTest", testStartTime, testEndTime, result)
+            writeDetailedMetricsToCSV("${testName}_Overall", testStartTime, testEndTime, result, versionDir)
         } catch (e: Exception) {
             println("Error writing detailed metrics: ${e.message}")
         }
 
-        println("Test completed. Metrics are stored in build/reports/metrics.")
+        println("Test completed for version $ideVersion. Metrics are stored in build/reports/metrics/$versionDir.")
 
         // Clean up
         try {
             cloneDir.deleteRecursively()
-            println("Cleaned up temporary clone directory.")
+            println("Cleaned up temporary clone directory for version $ideVersion.")
         } catch (e: Exception) {
-            println("Warning: Failed to clean up temporary directory: ${e.message}")
+            println("Warning: Failed to clean up temporary directory for version $ideVersion: ${e.message}")
         }
     }
 }

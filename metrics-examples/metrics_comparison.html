@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IDE Performance Comparison</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        .container { margin-bottom: 30px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; position: sticky; top: 0; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        .improvement { color: green; }
+        .regression { color: red; }
+        .chart-container { width: 100%; height: 400px; margin-bottom: 30px; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>IDE Performance Comparison</h1>
+    <p>Generated on 2025-06-20T08:38:04.599443</p><div class="container">
+    <h2>Performance Summary</h2>
+    <table>
+        <tr>
+            <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>Total Execution Time (ms)</td><td>8849</td><td>8419</td><td class="improvement">-430.00 (-4.86%)</td></tr><tr><td>IDE Startup Time (ms)</td><td>3301</td><td>3068</td><td class="improvement">-233.00 (-7.06%)</td></tr><tr><td>Git Clone Time (ms)</td><td>4107</td><td>6355</td><td class="regression">+2248.00 (+54.74%)</td></tr><tr><td>Indexing Time (ms)</td><td>10329</td><td>2763</td><td class="improvement">-7566.00 (-73.25%)</td></tr><tr><td>Max Memory (MB)</td><td>512</td><td>512</td><td class="">+0.00 (+0.00%)</td></tr></table></div><div class="container">
+    <h2>Performance Charts</h2><h3>Total Execution Time (ms)</h3>
+<div class="chart-container">
+    <canvas id="chart_ExecutionTimeMs"></canvas>
+</div><h3>IDE Startup Time (ms)</h3>
+<div class="chart-container">
+    <canvas id="chart_StartupTimeMs"></canvas>
+</div><h3>Git Clone Time (ms)</h3>
+<div class="chart-container">
+    <canvas id="chart_GitCloneTimeMs"></canvas>
+</div><h3>Indexing Time (ms)</h3>
+<div class="chart-container">
+    <canvas id="chart_IndexingTimeMs"></canvas>
+</div><h3>Max Memory (MB)</h3>
+<div class="chart-container">
+    <canvas id="chart_MaxMemoryMB"></canvas>
+</div></div><div class="container">
+    <h2>Detailed Metrics</h2><h3>GitCloneMetrics_2024.3</h3>
+<table>
+    <tr>
+        <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>GitCloneTimeMs</td><td>706</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr></table><h3>GitCloneMetrics_2025.1</h3>
+<table>
+    <tr>
+        <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>GitCloneTimeMs</td><td>N/A</td><td>1802</td><td class="">+0.00 (+0.00%)</td></tr></table><h3>GitClonePhase_2024.3</h3>
+<table>
+    <tr>
+        <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>ExecutionTimeMs</td><td>706</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>TestEndTime</td><td>2025-06-20T15:35:43.837588Z</td><td>N/A</td><td>N/A</td></tr><tr><td>TestStartTime</td><td>2025-06-20T15:35:43.131365Z</td><td>N/A</td><td>N/A</td></tr></table><h3>GitClonePhase_2025.1</h3>
+<table>
+    <tr>
+        <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>ExecutionTimeMs</td><td>N/A</td><td>1802</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>TestEndTime</td><td>N/A</td><td>2025-06-20T15:37:02.386800Z</td><td>N/A</td></tr><tr><td>TestStartTime</td><td>N/A</td><td>2025-06-20T15:37:00.583825Z</td><td>N/A</td></tr></table><h3>IDEStartupPhase_2024.3</h3>
+<table>
+    <tr>
+        <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>AppInitTimeMs</td><td>886</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>CPUUsagePercent</td><td>25</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ExecutionTimeMs</td><td>8849</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>GitCloneTimeMs</td><td>4107</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingFilesCount</td><td>5460</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingTimeMs</td><td>10329</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>MaxMemoryMB</td><td>512</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ProjectOpenTimeMs</td><td>3052</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>StartupTimeMs</td><td>3301</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>TestEndTime</td><td>2025-06-20T15:35:42.996091Z</td><td>N/A</td><td>N/A</td></tr><tr><td>TestStartTime</td><td>2025-06-20T15:35:34.146305Z</td><td>N/A</td><td>N/A</td></tr><tr><td>UIFreezeCount</td><td>4</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>UIFreezeTimeMs</td><td>614</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr></table><h3>IDEStartupPhase_2025.1</h3>
+<table>
+    <tr>
+        <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>AppInitTimeMs</td><td>N/A</td><td>522</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>CPUUsagePercent</td><td>N/A</td><td>27</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ExecutionTimeMs</td><td>N/A</td><td>8419</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>GitCloneTimeMs</td><td>N/A</td><td>6355</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingFilesCount</td><td>N/A</td><td>4948</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingTimeMs</td><td>N/A</td><td>2763</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>MaxMemoryMB</td><td>N/A</td><td>512</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ProjectOpenTimeMs</td><td>N/A</td><td>1208</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>StartupTimeMs</td><td>N/A</td><td>3068</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>TestEndTime</td><td>N/A</td><td>2025-06-20T15:37:00.582856Z</td><td>N/A</td></tr><tr><td>TestStartTime</td><td>N/A</td><td>2025-06-20T15:36:52.163001Z</td><td>N/A</td></tr><tr><td>UIFreezeCount</td><td>N/A</td><td>3</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>UIFreezeTimeMs</td><td>N/A</td><td>1052</td><td class="">+0.00 (+0.00%)</td></tr></table><h3>IndexingPhase_2024.3</h3>
+<table>
+    <tr>
+        <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>AppInitTimeMs</td><td>509</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>CPUUsagePercent</td><td>22</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ExecutionTimeMs</td><td>68253</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>GitCloneTimeMs</td><td>8412</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingFilesCount</td><td>4968</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingTimeMs</td><td>3298</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>MaxMemoryMB</td><td>512</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ProjectOpenTimeMs</td><td>1221</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>StartupTimeMs</td><td>4444</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>TestEndTime</td><td>2025-06-20T15:36:52.095218Z</td><td>N/A</td><td>N/A</td></tr><tr><td>TestStartTime</td><td>2025-06-20T15:35:43.841349Z</td><td>N/A</td><td>N/A</td></tr><tr><td>UIFreezeCount</td><td>4</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>UIFreezeTimeMs</td><td>128</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr></table><h3>IndexingPhase_2025.1</h3>
+<table>
+    <tr>
+        <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>AppInitTimeMs</td><td>N/A</td><td>773</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>CPUUsagePercent</td><td>N/A</td><td>24</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ExecutionTimeMs</td><td>N/A</td><td>35016</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>GitCloneTimeMs</td><td>N/A</td><td>3264</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingFilesCount</td><td>N/A</td><td>2500</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingTimeMs</td><td>N/A</td><td>5260</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>MaxMemoryMB</td><td>N/A</td><td>512</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ProjectOpenTimeMs</td><td>N/A</td><td>2847</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>StartupTimeMs</td><td>N/A</td><td>6127</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>TestEndTime</td><td>N/A</td><td>2025-06-20T15:37:37.408450Z</td><td>N/A</td></tr><tr><td>TestStartTime</td><td>N/A</td><td>2025-06-20T15:37:02.391459Z</td><td>N/A</td></tr><tr><td>UIFreezeCount</td><td>N/A</td><td>5</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>UIFreezeTimeMs</td><td>N/A</td><td>433</td><td class="">+0.00 (+0.00%)</td></tr></table><h3>StartupGitCloneIndexingTest_2024.3_Overall</h3>
+<table>
+    <tr>
+        <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>AppInitTimeMs</td><td>1979</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>CPUUsagePercent</td><td>16</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ExecutionTimeMs</td><td>77963</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>GitCloneTimeMs</td><td>7001</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingFilesCount</td><td>3579</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingTimeMs</td><td>7601</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>MaxMemoryMB</td><td>512</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ProjectOpenTimeMs</td><td>2868</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>StartupTimeMs</td><td>4045</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>TestEndTime</td><td>2025-06-20T15:36:52.109274Z</td><td>N/A</td><td>N/A</td></tr><tr><td>TestStartTime</td><td>2025-06-20T15:35:34.145412Z</td><td>N/A</td><td>N/A</td></tr><tr><td>TotalMemoryMB</td><td>185</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>UIFreezeCount</td><td>4</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>UIFreezeTimeMs</td><td>725</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>UsedMemoryMB</td><td>65</td><td>N/A</td><td class="">+0.00 (+0.00%)</td></tr></table><h3>StartupGitCloneIndexingTest_2025.1_Overall</h3>
+<table>
+    <tr>
+        <th>Metric</th><th>2024.3</th><th>2025.1</th><th>Change</th></tr><tr><td>AppInitTimeMs</td><td>N/A</td><td>2155</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>CPUUsagePercent</td><td>N/A</td><td>37</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ExecutionTimeMs</td><td>N/A</td><td>45247</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>GitCloneTimeMs</td><td>N/A</td><td>6984</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingFilesCount</td><td>N/A</td><td>2851</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>IndexingTimeMs</td><td>N/A</td><td>4188</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>MaxMemoryMB</td><td>N/A</td><td>512</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>ProjectOpenTimeMs</td><td>N/A</td><td>2972</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>StartupTimeMs</td><td>N/A</td><td>3108</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>TestEndTime</td><td>N/A</td><td>2025-06-20T15:37:37.410016Z</td><td>N/A</td></tr><tr><td>TestStartTime</td><td>N/A</td><td>2025-06-20T15:36:52.162848Z</td><td>N/A</td></tr><tr><td>TotalMemoryMB</td><td>N/A</td><td>185</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>UIFreezeCount</td><td>N/A</td><td>10</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>UIFreezeTimeMs</td><td>N/A</td><td>252</td><td class="">+0.00 (+0.00%)</td></tr><tr><td>UsedMemoryMB</td><td>N/A</td><td>63</td><td class="">+0.00 (+0.00%)</td></tr></table></div><script>new Chart(document.getElementById('chart_ExecutionTimeMs'), {
+    type: 'bar',
+    data: {
+        labels: ['2024.3', '2025.1'],
+        datasets: [{
+            label: 'Total Execution Time (ms)',
+            data: [8849.0, 8419.0],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'ms'
+                }
+            }
+        }
+    }
+});new Chart(document.getElementById('chart_StartupTimeMs'), {
+    type: 'bar',
+    data: {
+        labels: ['2024.3', '2025.1'],
+        datasets: [{
+            label: 'IDE Startup Time (ms)',
+            data: [3301.0, 3068.0],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'ms'
+                }
+            }
+        }
+    }
+});new Chart(document.getElementById('chart_GitCloneTimeMs'), {
+    type: 'bar',
+    data: {
+        labels: ['2024.3', '2025.1'],
+        datasets: [{
+            label: 'Git Clone Time (ms)',
+            data: [4107.0, 6355.0],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'ms'
+                }
+            }
+        }
+    }
+});new Chart(document.getElementById('chart_IndexingTimeMs'), {
+    type: 'bar',
+    data: {
+        labels: ['2024.3', '2025.1'],
+        datasets: [{
+            label: 'Indexing Time (ms)',
+            data: [10329.0, 2763.0],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'ms'
+                }
+            }
+        }
+    }
+});new Chart(document.getElementById('chart_MaxMemoryMB'), {
+    type: 'bar',
+    data: {
+        labels: ['2024.3', '2025.1'],
+        datasets: [{
+            label: 'Max Memory (MB)',
+            data: [512.0, 512.0],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'MB'
+                }
+            }
+        }
+    }
+});</script></body>
+</html>

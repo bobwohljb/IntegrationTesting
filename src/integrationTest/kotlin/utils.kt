@@ -66,7 +66,7 @@ fun writeMetricsSummaryToCSV(metrics: List<Map<String, Any>>, outputDir: Path) {
 }
 
 // Simple function to write test execution time to a CSV file
-fun writeTestExecutionTime(testName: String, startTime: Instant, endTime: Instant) {
+fun writeTestExecutionTime(testName: String, startTime: Instant, endTime: Instant, versionDir: String? = null) {
     val executionTimeMs = Duration.between(startTime, endTime).toMillis()
 
     // Write to metrics file with start and end times
@@ -74,7 +74,7 @@ fun writeTestExecutionTime(testName: String, startTime: Instant, endTime: Instan
         "ExecutionTimeMs" to executionTimeMs,
         "TestStartTime" to startTime.toString(),
         "TestEndTime" to endTime.toString()
-    ))
+    ), versionDir)
 
     println("#".repeat(20))
     println("Test execution metrics:")
@@ -86,7 +86,7 @@ fun writeTestExecutionTime(testName: String, startTime: Instant, endTime: Instan
 }
 
 // Function to write detailed metrics to a CSV file
-fun writeDetailedMetricsToCSV(testName: String, startTime: Instant, endTime: Instant, ideStartResult: IDEStartResult) {
+fun writeDetailedMetricsToCSV(testName: String, startTime: Instant, endTime: Instant, ideStartResult: IDEStartResult, versionDir: String? = null) {
     val executionTimeMs = Duration.between(startTime, endTime).toMillis()
 
     // Collect additional metrics
@@ -132,7 +132,7 @@ fun writeDetailedMetricsToCSV(testName: String, startTime: Instant, endTime: Ins
         metricsMap["TestEndTime"] = endTime.toString()
 
         // Write all metrics to consolidated file
-        writeToConsolidatedMetricsFile(testName, metricsMap)
+        writeToConsolidatedMetricsFile(testName, metricsMap, versionDir)
 
         // Print collected metrics
         println("#".repeat(20))
@@ -149,7 +149,7 @@ fun writeDetailedMetricsToCSV(testName: String, startTime: Instant, endTime: Ins
             "ExecutionTimeMs" to executionTimeMs,
             "TestStartTime" to startTime.toString(),
             "TestEndTime" to endTime.toString()
-        ))
+        ), versionDir)
     }
 
     println("#".repeat(20))
@@ -202,7 +202,7 @@ fun gatherAndWriteAllMetrics(
 
 
 // Function to write memory usage metrics to a CSV file
-fun writeMemoryMetricsToCSV(testName: String, startTime: Instant? = null, endTime: Instant? = null) {
+fun writeMemoryMetricsToCSV(testName: String, startTime: Instant? = null, endTime: Instant? = null, versionDir: String? = null) {
     // Get current memory usage
     val runtime = Runtime.getRuntime()
     val usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024) // in MB
@@ -225,7 +225,7 @@ fun writeMemoryMetricsToCSV(testName: String, startTime: Instant? = null, endTim
     }
 
     // Write to metrics file
-    writeToConsolidatedMetricsFile(testName, metricsMap)
+    writeToConsolidatedMetricsFile(testName, metricsMap, versionDir)
 
     println("#".repeat(20))
     println("Memory metrics:")
@@ -239,8 +239,13 @@ fun writeMemoryMetricsToCSV(testName: String, startTime: Instant? = null, endTim
 }
 
 // Function to write all metrics to a consolidated CSV file
-fun writeToConsolidatedMetricsFile(testName: String, metrics: Map<String, Any>) {
-    val metricsDir = Paths.get("build/reports/metrics")
+fun writeToConsolidatedMetricsFile(testName: String, metrics: Map<String, Any>, versionDir: String? = null) {
+    val baseMetricsDir = Paths.get("build/reports/metrics")
+    val metricsDir = if (versionDir != null) {
+        baseMetricsDir.resolve(versionDir)
+    } else {
+        baseMetricsDir
+    }
     File(metricsDir.toString()).mkdirs()
 
     val csvFile = metricsDir.resolve("metrics.csv").toFile()
