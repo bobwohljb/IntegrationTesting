@@ -575,6 +575,10 @@ class PluginTest {
         try {
             // Collect metrics for each version
             val versionMetrics = mutableMapOf<String, Map<String, Map<String, Any>>>()
+            val configuredVersions = ideVersions.toList() // Keep track of configured versions
+            val versionsWithData = mutableListOf<String>()
+            val testRunId = "test-run-${System.currentTimeMillis()}" // Generate a unique test run ID
+            val testRunTime = java.time.LocalDateTime.now()
 
             // For each version, read the metrics from the CSV file
             for (version in ideVersions) {
@@ -583,14 +587,25 @@ class PluginTest {
 
                 if (csvFile.exists()) {
                     val metrics = readMetricsFromCSV(csvFile, version)
-                    versionMetrics[version] = metrics
+                    if (metrics.isNotEmpty() && metrics.values.any { it.isNotEmpty() }) {
+                        versionMetrics[version] = metrics
+                        versionsWithData.add(version)
+                    } else {
+                        println("Warning: Metrics file for version $version exists but contains no data")
+                    }
                 } else {
                     println("Warning: No metrics file found for version $version at ${csvFile.absolutePath}")
                 }
             }
 
             // Generate the HTML report
-            val htmlContent = generateComparisonHTML(versionMetrics)
+            val htmlContent = generateComparisonHTML(
+                versionMetrics, 
+                configuredVersions, 
+                versionsWithData, 
+                testRunId, 
+                testRunTime
+            )
 
             // Write the HTML report
             reportFile.writeText(htmlContent)
@@ -644,7 +659,22 @@ class PluginTest {
         return metrics
     }
 
-    private fun generateComparisonHTML(versionMetrics: Map<String, Map<String, Map<String, Any>>>): String {
+    private fun generateComparisonHTML(
+        versionMetrics: Map<String, Map<String, Map<String, Any>>>,
+        configuredVersions: List<String>,
+        versionsWithData: List<String>,
+        testRunId: String,
+        testRunTime: java.time.LocalDateTime
+    ): String {
+        // Define key metrics once to be used throughout the function
+        val keyMetrics = listOf(
+            "ExecutionTimeMs" to "Total Execution Time (ms)",
+            "StartupTimeMs" to "IDE Startup Time (ms)",
+            "GitCloneTimeMs" to "Git Clone Time (ms)",
+            "IndexingTimeMs" to "Indexing Time (ms)",
+            "MaxMemoryMB" to "Max Memory (MB)"
+        )
+
         return buildString {
             append("""
                 <!DOCTYPE html>
@@ -660,256 +690,346 @@ class PluginTest {
                         th { background-color: #f2f2f2; position: sticky; top: 0; }
                         tr:nth-child(even) { background-color: #f9f9f9; }
                         tr:hover { background-color: #f1f1f1; }
-                        .improvement { color: green; }
-                        .regression { color: red; }
+                        .improvement { color: green; font-weight: bold; }
+                        .regression { color: red; font-weight: bold; }
                         .chart-container { width: 100%; height: 400px; margin-bottom: 30px; }
+                        .info-panel { background-color: #f8f9fa; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+                        .info-panel h3 { margin-top: 0; }
+                        .info-panel table { margin-bottom: 0; }
+                        .warning { background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin: 10px 0; }
+                        .error { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 10px 0; }
                     </style>
                     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
                 </head>
                 <body>
                     <h1>IDE Performance Comparison</h1>
-                    <p>Generated on ${java.time.LocalDateTime.now()}</p>
+
+                    <!-- Test Information Panel -->
+                    <div class="info-panel">
+                        <h3>Test Run Information</h3>
+                        <table>
+                            <tr><td><strong>Test Run ID:</strong></td><td>${testRunId}</td></tr>
+                            <tr><td><strong>Run Date/Time:</strong></td><td>${testRunTime}</td></tr>
+                            <tr><td><strong>Configured IDE Versions:</strong></td><td>${configuredVersions.joinToString(", ")}</td></tr>
+                            <tr><td><strong>Versions with Data:</strong></td><td>${versionsWithData.joinToString(", ")}</td></tr>
+                        </table>
+                    </div>
             """.trimIndent())
 
-            // Add summary section
-            append("""
+            // Check if we have any versions with data
+            if (versionsWithData.isEmpty()) {
+                append("""
+                    <div class="error">
+                        <strong>No comparison data available.</strong> None of the configured IDE versions have metrics data.
+                        Please run the tests again to collect metrics data.
+                    </div>
+                """.trimIndent())
+            } else {
+                // Add summary section
+                append("""
                     <div class="container">
                         <h2>Performance Summary</h2>
-                        <table>
-                            <tr>
-                                <th>Metric</th>
-            """.trimIndent())
+                """.trimIndent())
 
-            // Add version headers
-            versionMetrics.keys.forEach { version ->
-                append("<th>$version</th>")
-            }
-
-            // If we have at least two versions, add a comparison column
-            if (versionMetrics.size >= 2) {
-                append("<th>Change</th>")
-            }
-
-            append("</tr>")
-
-            // Add key metrics rows
-            val keyMetrics = listOf(
-                "ExecutionTimeMs" to "Total Execution Time (ms)",
-                "StartupTimeMs" to "IDE Startup Time (ms)",
-                "GitCloneTimeMs" to "Git Clone Time (ms)",
-                "IndexingTimeMs" to "Indexing Time (ms)",
-                "MaxMemoryMB" to "Max Memory (MB)"
-            )
-
-            for ((metricKey, metricLabel) in keyMetrics) {
-                append("<tr><td>$metricLabel</td>")
-
-                // Get the versions in order (assuming we want to compare the first version with the last)
-                val orderedVersions = versionMetrics.keys.sorted()
-                var firstVersionValue: Double? = null
-                var lastVersionValue: Double? = null
-
-                // Add values for each version
-                for (version in orderedVersions) {
-                    val versionData = versionMetrics[version]
-                    val value = findMetricValue(versionData, metricKey)
-
-                    if (value != null) {
-                        append("<td>${formatValue(value)}</td>")
-
-                        if (firstVersionValue == null) {
-                            firstVersionValue = value.toString().toDoubleOrNull()
-                        }
-                        lastVersionValue = value.toString().toDoubleOrNull()
-                    } else {
-                        append("<td>N/A</td>")
-                    }
-                }
-
-                // Add comparison column if we have at least two versions
-                if (versionMetrics.size >= 2 && firstVersionValue != null && lastVersionValue != null) {
-                    val change = lastVersionValue - firstVersionValue
-                    val percentChange = (change / firstVersionValue) * 100
-
-                    val changeClass = when {
-                        // For execution time, indexing time, etc., lower is better
-                        metricKey in listOf("ExecutionTimeMs", "StartupTimeMs", "GitCloneTimeMs", "IndexingTimeMs") -> {
-                            if (change < 0) "improvement" else if (change > 0) "regression" else ""
-                        }
-                        // For memory, it depends on the context, but generally lower is better
-                        else -> {
-                            if (change < 0) "improvement" else if (change > 0) "regression" else ""
-                        }
-                    }
-
-                    append("<td class=\"$changeClass\">${formatChange(change, percentChange)}</td>")
-                } else if (versionMetrics.size >= 2) {
-                    append("<td>N/A</td>")
-                }
-
-                append("</tr>")
-            }
-
-            append("</table></div>")
-
-            // Add charts for key metrics
-            append("""
-                    <div class="container">
-                        <h2>Performance Charts</h2>
-            """.trimIndent())
-
-            // Create a chart for each key metric
-            for ((metricKey, metricLabel) in keyMetrics) {
-                val chartId = "chart_${metricKey}"
-
-                append("""
-                        <h3>$metricLabel</h3>
-                        <div class="chart-container">
-                            <canvas id="$chartId"></canvas>
+                // Add a warning if some versions don't have data
+                if (configuredVersions.size != versionsWithData.size) {
+                    val missingVersions = configuredVersions.filterNot { it in versionsWithData }
+                    append("""
+                        <div class="warning">
+                            <strong>Note:</strong> Some configured IDE versions (${missingVersions.joinToString(", ")}) 
+                            don't have metrics data and are excluded from the comparison.
                         </div>
-                """.trimIndent())
-            }
+                    """.trimIndent())
+                }
 
-            append("</div>")
-
-            // Add detailed metrics section
-            append("""
-                    <div class="container">
-                        <h2>Detailed Metrics</h2>
-            """.trimIndent())
-
-            // Get all test names across all versions
-            val allTestNames = versionMetrics.values.flatMap { it.keys }.distinct().sorted()
-
-            // For each test, create a comparison table
-            for (testName in allTestNames) {
                 append("""
-                        <h3>$testName</h3>
                         <table>
                             <tr>
                                 <th>Metric</th>
                 """.trimIndent())
 
-                // Add version headers
-                versionMetrics.keys.forEach { version ->
+                // Add version headers (only for versions with data)
+                versionsWithData.sorted().forEach { version ->
                     append("<th>$version</th>")
                 }
 
-                // If we have at least two versions, add a comparison column
-                if (versionMetrics.size >= 2) {
+                // If we have at least two versions with data, add a comparison column
+                if (versionsWithData.size >= 2) {
                     append("<th>Change</th>")
                 }
 
                 append("</tr>")
 
-                // Get all metrics for this test across all versions
-                val allMetrics = versionMetrics.values
-                    .flatMap { versionData -> 
-                        versionData[testName]?.keys ?: emptyList() 
-                    }
-                    .distinct()
-                    .sorted()
+                // Add key metrics rows
+                val keyMetrics = listOf(
+                    "ExecutionTimeMs" to "Total Execution Time (ms)",
+                    "StartupTimeMs" to "IDE Startup Time (ms)",
+                    "GitCloneTimeMs" to "Git Clone Time (ms)",
+                    "IndexingTimeMs" to "Indexing Time (ms)",
+                    "MaxMemoryMB" to "Max Memory (MB)"
+                )
 
-                // Add a row for each metric
-                for (metric in allMetrics) {
-                    append("<tr><td>$metric</td>")
+                for ((metricKey, metricLabel) in keyMetrics) {
+                    append("<tr><td>$metricLabel</td>")
 
-                    // Get the versions in order
-                    val orderedVersions = versionMetrics.keys.sorted()
+                    // Get the versions in order (only those with data)
+                    val orderedVersions = versionsWithData.sorted()
                     var firstVersionValue: Double? = null
                     var lastVersionValue: Double? = null
+                    var versionsWithThisMetric = 0
 
                     // Add values for each version
                     for (version in orderedVersions) {
                         val versionData = versionMetrics[version]
-                        val testData = versionData?.get(testName)
-                        val value = testData?.get(metric)
+                        val value = findMetricValue(versionData, metricKey)
 
                         if (value != null) {
                             append("<td>${formatValue(value)}</td>")
+                            versionsWithThisMetric++
 
                             if (firstVersionValue == null) {
                                 firstVersionValue = value.toString().toDoubleOrNull()
                             }
                             lastVersionValue = value.toString().toDoubleOrNull()
                         } else {
-                            append("<td>N/A</td>")
+                            append("<td>No data</td>")
                         }
                     }
 
-                    // Add comparison column if we have at least two versions
-                    if (versionMetrics.size >= 2 && firstVersionValue != null && lastVersionValue != null) {
-                        val change = lastVersionValue - firstVersionValue
-                        val percentChange = (change / firstVersionValue) * 100
+                    // Add comparison column if we have at least two versions with this metric
+                    if (versionsWithData.size >= 2) {
+                        if (firstVersionValue != null && lastVersionValue != null && versionsWithThisMetric >= 2) {
+                            val change = lastVersionValue - firstVersionValue
+                            val percentChange = (change / firstVersionValue) * 100
 
-                        val changeClass = when {
-                            // For execution time, indexing time, etc., lower is better
-                            metric.contains("Time") || metric.contains("Duration") -> {
-                                if (change < 0) "improvement" else if (change > 0) "regression" else ""
+                            val changeClass = when {
+                                // For execution time, indexing time, etc., lower is better
+                                metricKey in listOf("ExecutionTimeMs", "StartupTimeMs", "GitCloneTimeMs", "IndexingTimeMs") -> {
+                                    if (change < 0) "improvement" else if (change > 0) "regression" else ""
+                                }
+                                // For memory, it depends on the context, but generally lower is better
+                                else -> {
+                                    if (change < 0) "improvement" else if (change > 0) "regression" else ""
+                                }
                             }
-                            // For memory, it depends on the context, but generally lower is better
-                            metric.contains("Memory") -> {
-                                if (change < 0) "improvement" else if (change > 0) "regression" else ""
-                            }
-                            // For other metrics, we don't know if higher or lower is better
-                            else -> ""
+
+                            append("<td class=\"$changeClass\">${formatChange(change, percentChange)}</td>")
+                        } else {
+                            append("<td>Insufficient data</td>")
                         }
-
-                        append("<td class=\"$changeClass\">${formatChange(change, percentChange)}</td>")
-                    } else if (versionMetrics.size >= 2) {
-                        append("<td>N/A</td>")
                     }
 
                     append("</tr>")
                 }
 
-                append("</table>")
+                append("</table></div>")
+            }
+
+            // Add charts for key metrics if we have data
+            if (versionsWithData.isNotEmpty()) {
+                append("""
+                    <div class="container">
+                        <h2>Performance Charts</h2>
+                """.trimIndent())
+
+                for ((metricKey, metricLabel) in keyMetrics) {
+                    val chartId = "chart_${metricKey}"
+
+                    append("""
+                        <h3>$metricLabel</h3>
+                        <div class="chart-container">
+                            <canvas id="$chartId"></canvas>
+                            <noscript>
+                                <div class="warning">
+                                    <strong>Note:</strong> Charts require JavaScript to render. 
+                                    If you're viewing this in GitHub preview, charts won't be visible.
+                                </div>
+                            </noscript>
+                        </div>
+                    """.trimIndent())
+                }
+
+                append("</div>")
+            }
+
+            // Add detailed metrics section if we have data
+            if (versionsWithData.isNotEmpty()) {
+                append("""
+                    <div class="container">
+                        <h2>Detailed Metrics</h2>
+                """.trimIndent())
+
+                // Get all test names across all versions
+                val allTestNames = versionMetrics.values.flatMap { it.keys }.distinct().sorted()
+
+                if (allTestNames.isEmpty()) {
+                    append("""
+                        <div class="warning">
+                            <strong>No detailed metrics available.</strong> No test data was found in the metrics files.
+                        </div>
+                    """.trimIndent())
+                } else {
+                    // For each test, create a comparison table
+                    for (testName in allTestNames) {
+                        append("""
+                            <h3>$testName</h3>
+                            <table>
+                                <tr>
+                                    <th>Metric</th>
+                        """.trimIndent())
+
+                        // Add version headers (only for versions with data)
+                        versionsWithData.sorted().forEach { version ->
+                            append("<th>$version</th>")
+                        }
+
+                        // If we have at least two versions with data, add a comparison column
+                        if (versionsWithData.size >= 2) {
+                            append("<th>Change</th>")
+                        }
+
+                        append("</tr>")
+
+                        // Get all metrics for this test across all versions
+                        val allMetrics = versionMetrics.values
+                            .flatMap { versionData -> 
+                                versionData[testName]?.keys ?: emptyList() 
+                            }
+                            .distinct()
+                            .sorted()
+
+                        // Add a row for each metric
+                        for (metric in allMetrics) {
+                            append("<tr><td>$metric</td>")
+
+                            // Get the versions in order (only those with data)
+                            val orderedVersions = versionsWithData.sorted()
+                            var firstVersionValue: Double? = null
+                            var lastVersionValue: Double? = null
+                            var versionsWithThisMetric = 0
+
+                            // Add values for each version
+                            for (version in orderedVersions) {
+                                val versionData = versionMetrics[version]
+                                val testData = versionData?.get(testName)
+                                val value = testData?.get(metric)
+
+                                if (value != null) {
+                                    append("<td>${formatValue(value)}</td>")
+                                    versionsWithThisMetric++
+
+                                    if (firstVersionValue == null) {
+                                        firstVersionValue = value.toString().toDoubleOrNull()
+                                    }
+                                    lastVersionValue = value.toString().toDoubleOrNull()
+                                } else {
+                                    append("<td>No data</td>")
+                                }
+                            }
+
+                            // Add comparison column if we have at least two versions with data
+                            if (versionsWithData.size >= 2) {
+                                if (firstVersionValue != null && lastVersionValue != null && versionsWithThisMetric >= 2) {
+                                    val change = lastVersionValue - firstVersionValue
+                                    val percentChange = (change / firstVersionValue) * 100
+
+                                    val changeClass = when {
+                                        // For execution time, indexing time, etc., lower is better
+                                        metric.contains("Time") || metric.contains("Duration") -> {
+                                            if (change < 0) "improvement" else if (change > 0) "regression" else ""
+                                        }
+                                        // For memory, it depends on the context, but generally lower is better
+                                        metric.contains("Memory") -> {
+                                            if (change < 0) "improvement" else if (change > 0) "regression" else ""
+                                        }
+                                        // For other metrics, we don't know if higher or lower is better
+                                        else -> ""
+                                    }
+
+                                    append("<td class=\"$changeClass\">${formatChange(change, percentChange)}</td>")
+                                } else {
+                                    append("<td>Insufficient data</td>")
+                                }
+                            }
+
+                            append("</tr>")
+                        }
+
+                        append("</table>")
+                    }
+                }
+
+                append("</div>")
             }
 
             append("</div>")
 
-            // Add JavaScript for charts
-            append("<script>")
-
-            // Create a chart for each key metric
-            for ((metricKey, metricLabel) in keyMetrics) {
-                val chartId = "chart_${metricKey}"
-                val labels = versionMetrics.keys.sorted()
-                val data = labels.map { version ->
-                    findMetricValue(versionMetrics[version], metricKey)?.toString()?.toDoubleOrNull() ?: 0.0
-                }
-
+            // Add JavaScript for charts if we have data
+            if (versionsWithData.isNotEmpty()) {
+                append("<script>")
                 append("""
-                    new Chart(document.getElementById('$chartId'), {
-                        type: 'bar',
-                        data: {
-                            labels: ${labels.map { "'$it'" }},
-                            datasets: [{
-                                label: '$metricLabel',
-                                data: $data,
-                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                                borderColor: 'rgba(54, 162, 235, 1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    title: {
-                                        display: true,
-                                        text: '${if (metricKey.contains("Memory")) "MB" else "ms"}'
+                    // Error handling for chart rendering
+                    function createChart(chartId, labels, data, metricLabel, yAxisLabel) {
+                        try {
+                            const ctx = document.getElementById(chartId);
+                            if (!ctx) {
+                                console.error('Chart element not found:', chartId);
+                                return;
+                            }
+
+                            new Chart(ctx, {
+                                type: 'bar',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: metricLabel,
+                                        data: data,
+                                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                        borderColor: 'rgba(54, 162, 235, 1)',
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            title: {
+                                                display: true,
+                                                text: yAxisLabel
+                                            }
+                                        }
                                     }
                                 }
-                            }
+                            });
+                        } catch (error) {
+                            console.error('Error creating chart:', error);
+                            const container = document.getElementById(chartId).parentNode;
+                            const errorMsg = document.createElement('div');
+                            errorMsg.className = 'error';
+                            errorMsg.innerHTML = '<strong>Error:</strong> Failed to render chart. ' + error.message;
+                            container.appendChild(errorMsg);
                         }
-                    });
+                    }
                 """.trimIndent())
-            }
 
-            append("</script>")
+                // Create a chart for each key metric
+                for ((metricKey, metricLabel) in keyMetrics) {
+                    val chartId = "chart_${metricKey}"
+                    val labels = versionsWithData.sorted()
+                    val data = labels.map { version ->
+                        findMetricValue(versionMetrics[version], metricKey)?.toString()?.toDoubleOrNull() ?: 0.0
+                    }
+                    val yAxisLabel = if (metricKey.contains("Memory")) "MB" else "ms"
+
+                    append("""
+                        createChart('$chartId', [${labels.joinToString(", ") { "'$it'" }}], [${data.joinToString(", ")}], '$metricLabel', '$yAxisLabel');
+                    """.trimIndent())
+                }
+
+                append("</script>")
+            }
 
             append("""
                 </body>
